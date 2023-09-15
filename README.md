@@ -6,7 +6,20 @@ The bathymetry blending class and dataset for our upcoming paper "Blending Bathy
 
 ```Python
 import bathyblendingERDC as bathyinv
-params = {'use_testdata':0} # define additional parameters use 032717 dataset 
+
+# 1. Initialize 
 DuckBathy = bathyinv.BathyBlending(cbathy_dir='./cbathy', pbt_dir='./pbt', survey_dirr='./survey', params=params)
+# 2. Perform blending
 blended_bathy = DuckBathy.blend()
+
+# 3. Post processing 
+DuckBathy.plot_bathy()
+DuckBathy.plot_bathy_error()
+DuckBathy.plot_bathy_fitting()
+DuckBathy.plot_bathy_fitting_all()
+DuckBathy.plot_transects([np.where(DuckBathy.y[0,:]==600)[0][0],np.where(DuckBathy.y[0,:]==950)[0][0]])
+DuckBathy.plot_obs_fitting()
+
+#DuckBathy.plot_obslocs()
+#DuckBathy.plot_cbathy_errors()
 ```
