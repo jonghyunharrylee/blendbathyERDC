@@ -840,7 +840,7 @@ class BathyBlending:
         
         plt.show()
 
-    def plot_bathy(self,h_cur=None,h_prior=None,h_cbathy = None, h_survey=None,hmin=-2.,hmax=None, pierFRF=((80,530),(515,515))):
+    def plot_bathy(self,h_cur=None,h_prior=None,h_cbathy = None, h_survey=None, hmin=-2., hmax=None, pierFRF=((80,530),(515,515)), xFRF=(80,800),  yFRF=(-500,1500), pierFRFhatch=None):
         '''
             plot results
             more details will be added here
@@ -859,10 +859,12 @@ class BathyBlending:
         if hmax is None:
             hmax = np.ceil(-h_survey[~np.isnan(h_survey)].min()) # np.ceil(np.max((h_prior,h_cur)))
 
+        column_ratio = (yFRF[1] - yFRF[0])/2000.
+        
         from mpl_toolkits.axes_grid1 import ImageGrid
 
         # Set up figure and image grid
-        fig = plt.figure(figsize=(10, 5))
+        fig = plt.figure(figsize=(10., 5.*(column_ratio*0.5 + 0.5)))
 
         ax = ImageGrid(fig, 111,          # as in plt.subplot(111)
                         nrows_ncols=(1,4),
@@ -889,7 +891,7 @@ class BathyBlending:
         #ax[0].set_title('Prior (PBT) ' + date[ii])
         #ax[0].set_title('Prior (PBT) ' + date[ii])
         ax[0].set_title('(a) Prior (PBT)', fontsize=14)
-        #ax[0].set_xticks([80,800])
+        ax[0].set_xticks([80,500,800])
         ax[0].set_yticks([-500,0,500,1000,1500])
         #fig.colorbar(im0, ax=ax[0])
         im1 = ax[1].pcolormesh(YY,XX,h_cbathy,cmap='jet_r',shading='auto',vmin=hmin, vmax = hmax)
@@ -899,21 +901,21 @@ class BathyBlending:
         ax[1].clabel(CS1, CS1.levels[::2], inline=True, fmt='%d', fontsize=9, colors='black')
 
 
-        ax[1].set_xticks([80,800])
+        ax[1].set_xticks([80,500,800])
         ax[1].set_yticks([-500,0,500,1000,1500])
         im2 = ax[2].pcolormesh(YY,XX, h_cur.reshape(ny,nx),cmap='jet_r',shading='auto',vmin=hmin, vmax = hmax)
         CS2 = ax[2].contour(YY, XX, h_cur.reshape(ny,nx), levels = mylevels, colors='black', linewidths=0.5)
         ax[2].clabel(CS2, CS2.levels[::2], inline=True, fmt='%d', fontsize=9, colors='black')
 
         ax[2].set_title('(c) Blending', fontsize=14)
-        ax[2].set_xticks([80,800])
+        ax[2].set_xticks([80,500,800])
         ax[2].set_yticks([-500,0,500,1000,1500])
         im3 = ax[3].pcolormesh(YY,XX,-h_survey,cmap='jet_r',shading='auto',vmin=hmin, vmax = hmax)
         CS3 = ax[3].contour(YY, XX, -h_survey, levels = mylevels, colors='black', linewidths=0.5)
         ax[3].clabel(CS3, CS3.levels[::2], inline=True, fmt='%d', fontsize=9, colors='black')
 
         ax[3].set_title('(d) Survey', fontsize=14)
-        ax[3].set_xticks([80,800])
+        ax[3].set_xticks([80,500,800])
         ax[3].set_yticks([-500,0,500,1000,1500])
 
         cbar = ax[3].cax.colorbar(im3)
@@ -923,6 +925,12 @@ class BathyBlending:
         if pierFRF is not None:
             for i in range(len(ax.axes_all)):
                 ax[i].plot(pierFRF[0],pierFRF[1],'k',linewidth=2)
+                if pierFRFhatch is not None:
+                    ax[i].fill_between((xFRF), (pierFRFhatch[0],pierFRFhatch[0]), (pierFRFhatch[1],pierFRFhatch[1]), facecolor="none", hatch="xx", edgecolor="k", linewidth=0.0)
+
+        if yFRF is not None:
+            for i in range(len(ax.axes_all)):
+                ax[i].set_ylim(yFRF[0],yFRF[1])
 
         fig.text(0.5, 0.0, 'xFRF [m]', va='center', ha='center', fontsize=plt.rcParams['axes.labelsize'])
         fig.text(0.1, 0.5, 'yFRF [m]', va='center', ha='center', rotation='vertical', fontsize=plt.rcParams['axes.labelsize'])
@@ -933,14 +941,16 @@ class BathyBlending:
         plt.savefig(join(self.output_dir,'estimate_' + str(self.mydate) + '.png'), dpi=150, bbox_inches='tight')
         plt.show()
         
-    def plot_bathy_error(self,pierFRF=((80,530),(515,515))):
+    def plot_bathy_error(self,pierFRF=((80,530),(515,515)), yFRF=(-500,1500), xFRF=(80,800), pierFRFhatch=None):
 
         from mpl_toolkits.axes_grid1 import ImageGrid
 
         nx, ny = self.nx, self.ny
 
+        column_ratio = (yFRF[1] - yFRF[0])/2000.
+    
         # Set up figure and image grid
-        fig = plt.figure(figsize=(8, 5))
+        fig = plt.figure(figsize=(10., 5.*(column_ratio*0.5 + 0.5)))
 
         ax = ImageGrid(fig, 111,          # as in plt.subplot(111)
                         nrows_ncols=(1,3),
@@ -983,7 +993,7 @@ class BathyBlending:
         #ax[0].set_title('Prior (PBT) ' + date[ii])
         #ax[0].set_title('Prior (PBT) ' + date[ii])
         ax[0].set_title('(a) PBT', fontsize=14)
-        #ax[0].set_xticks([80,800])
+        ax[0].set_xticks([80,500,800])
         ax[0].set_yticks([-500,0,500,1000,1500])
         #fig.colorbar(im0, ax=ax[0])
         #im1 = ax[1].pcolormesh(YY,XX,cbathy_diff,cmap='RdBu',shading='auto',vmin=hmin, vmax = hmax)
@@ -994,7 +1004,7 @@ class BathyBlending:
 
         #ax[1].set_title('Estimate ' + date[ii])
         ax[1].set_title('(b) cBathy', fontsize=14)
-        ax[1].set_xticks([80,800])
+        ax[1].set_xticks([80,500,800])
         ax[1].set_yticks([-500,0,500,1000,1500])
         #fig.colorbar(im1, ax=ax[1])
         #im2 = ax[2].pcolormesh(YY,XX,cur_diff,cmap='RdBu',shading='auto',vmin=hmin, vmax = hmax)
@@ -1004,7 +1014,7 @@ class BathyBlending:
 
         #ax[2].set_title('Cbathy ' + date[ii])
         ax[2].set_title('(c) Blending', fontsize=14)
-        ax[2].set_xticks([80,800])
+        ax[2].set_xticks([80,500,800])
         ax[2].set_yticks([-500,0,500,1000,1500])
 
         cbar = ax[2].cax.colorbar(im2)
@@ -1014,17 +1024,29 @@ class BathyBlending:
         if pierFRF is not None:
             for i in range(len(ax.axes_all)):
                 ax[i].plot(pierFRF[0],pierFRF[1],'k',linewidth=2)
+                if pierFRFhatch is not None:
+                    ax[i].fill_between((xFRF), (pierFRFhatch[0],pierFRFhatch[0]), (pierFRFhatch[1],pierFRFhatch[1]), facecolor="none", hatch="xx", edgecolor="k", linewidth=0.0)
 
+        if yFRF is not None:
+            for i in range(len(ax.axes_all)):
+                ax[i].set_ylim(yFRF[0],yFRF[1])
 
         fig.text(0.5, 0.0, 'xFRF [m]', va='center', ha='center', fontsize=plt.rcParams['axes.labelsize'])
         fig.text(0.1, 0.5, 'yFRF [m]', va='center', ha='center', rotation='vertical', fontsize=plt.rcParams['axes.labelsize'])
 
-        ax[0].text(150, -300,'RMSE: %5.2f m' % (self.rmse_prior))
-        ax[0].text(150, -400,'Bias: %5.2f m' % (self.bias_prior))
-        ax[1].text(150, -300,'RMSE: %5.2f m' % (self.rmse_cbathy))
-        ax[1].text(150, -400,'Bias: %5.2f m' % (self.bias_cbathy))
-        ax[2].text(150, -300,'RMSE: %5.2f m' % (self.rmse_blending))
-        ax[2].text(150, -400,'Bias: %5.2f m' % (self.bias_blending))
+        # ax[0].text(150, -300,'RMSE: %5.2f m' % (self.rmse_prior))
+        # ax[0].text(150, -400,'Bias: %5.2f m' % (self.bias_prior))
+        # ax[1].text(150, -300,'RMSE: %5.2f m' % (self.rmse_cbathy))
+        # ax[1].text(150, -400,'Bias: %5.2f m' % (self.bias_cbathy))
+        # ax[2].text(150, -300,'RMSE: %5.2f m' % (self.rmse_blending))
+        # ax[2].text(150, -400,'Bias: %5.2f m' % (self.bias_blending))
+
+        ax[0].text(150, yFRF[0]+200,'RMSE: %5.2f m' % (self.rmse_prior))
+        ax[0].text(150, yFRF[0]+100,'Bias: %5.2f m' % (self.bias_prior))
+        ax[1].text(150, yFRF[0]+200,'RMSE: %5.2f m' % (self.rmse_cbathy))
+        ax[1].text(150, yFRF[0]+100,'Bias: %5.2f m' % (self.bias_cbathy))
+        ax[2].text(150, yFRF[0]+200,'RMSE: %5.2f m' % (self.rmse_blending))
+        ax[2].text(150, yFRF[0]+100,'Bias: %5.2f m' % (self.bias_blending))
         fig.tight_layout()
         fig.subplots_adjust(top=0.87)
 
