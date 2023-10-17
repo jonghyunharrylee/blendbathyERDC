@@ -198,6 +198,8 @@ class BathyBlending:
         
         # pbt - tide subtracted; this may become a future issue and needs to be fixed.
         self.h_pbt = self.h_pbt + self.tide
+        ## h_cbathy : f_combined needs to be subtracted by tide for visualization/comparison 
+        self.h_cbathy = self.h_cbathy - self.tide
 
         # Domain configuration and k-fB data screening
         # k-fB data chosen based on cbathy data quality control criteria (see below) as well as cbathy estimate locations
@@ -941,11 +943,20 @@ class BathyBlending:
         plt.savefig(join(self.output_dir,'estimate_' + str(self.mydate) + '.png'), dpi=150, bbox_inches='tight')
         plt.show()
         
-    def plot_bathy_error(self,pierFRF=((80,530),(515,515)), yFRF=(-500,1500), xFRF=(80,800), pierFRFhatch=None):
+    def plot_bathy_error(self,pierFRF=((80,530),(515,515)), yFRF=(-500,1500), xFRF=(80,800), pierFRFhatch=None, h_cur=None,h_prior=None,h_cbathy = None, h_survey=None):
 
         from mpl_toolkits.axes_grid1 import ImageGrid
 
         nx, ny = self.nx, self.ny
+
+        if h_cur is None:
+            h_cur = self.h_cur
+        if h_prior is None:
+            h_prior = self.h_prior
+        if h_survey is None:
+            h_survey = self.h_survey
+        if h_cbathy is None:
+            h_cbathy = self.h_cbathy
 
         column_ratio = (yFRF[1] - yFRF[0])/2000.
     
@@ -968,9 +979,9 @@ class BathyBlending:
         # fig, ax = plt.subplots(1,4,figsize=(16,6)) # 20,6
         fig.suptitle('Difference between Estimate and Survey %s' % (self.mydatetext))
 
-        prior_diff = -self.h_survey-self.h_prior.reshape(ny,nx)
-        cur_diff = -self.h_survey-self.h_cur.reshape(ny,nx)
-        cbathy_diff = -self.h_survey-self.h_cbathy.reshape(ny,nx)
+        prior_diff = -h_survey-h_prior.reshape(ny,nx)
+        cur_diff = -h_survey-h_cur.reshape(ny,nx)
+        cbathy_diff = -h_survey-h_cbathy.reshape(ny,nx)
 
         # print(np.nanmin(prior_diff),np.nanmax(prior_diff))
         # print(np.nanmin(cur_diff),np.nanmax(cur_diff))
