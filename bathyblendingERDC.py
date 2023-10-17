@@ -3,7 +3,7 @@
  - 
 @author: Jonghyun Harry Lee 
 @version 0.1 
-@date 07/12/2023
+@date 10/17/2023
 
 This is a template script to be used with the Bathy Blending App. The model object should be able to do three things when called upon in the app:
     - load in the data in a cbathy format by use of the _load_data() 
@@ -1264,6 +1264,176 @@ class BathyBlending:
 
         plt.savefig(join(self.output_dir,'bathy_fitting_' + str(self.mydate) + '_separate.png'), dpi=150, bbox_inches='tight')
         plt.show()
+
+    def plot_bathy_fitting_wavenumber(self):
+        '''
+            plot (a) bathy_fitting and (b) wavenumber
+        '''
+
+        from mpl_toolkits.axes_grid1 import ImageGrid
+        idx_iswatersurvey = np.logical_and(~np.isnan(self.h_survey),(self.h_survey < 0.))
+        #n_h_survey_water = np.sum(idx_iswatersurvey)
+        #print(n_h_survey_water)
+
+        YY, XX = np.meshgrid(self.x,self.y)
+        
+        idx_is_non_pier = np.logical_or((XX <= 400.),(XX >= 600.))
+        #n_h_non_pier = np.sum(idx_is_non_pier)
+        
+        prior_diff = -self.h_survey-self.h_prior.reshape(self.ny,self.nx)
+        # prior_diff = prior_diff[~np.isnan(prior_diff)] # entire area
+        # prior_diff = prior_diff[np.logical_and(idx_iswatersurvey,~np.isnan(prior_diff))] # underwater area
+        idx_prior = np.logical_and(np.logical_and(idx_iswatersurvey,~np.isnan(prior_diff)),idx_is_non_pier)
+        prior_diff = prior_diff[idx_prior] # underwater non-pier area 
+        n_prior_diff = prior_diff.shape[0]
+        totsumsqr = ((-self.h_survey[idx_prior] - np.mean(-self.h_survey[idx_prior]))**2).sum()
+        
+        cur_diff = -self.h_survey-self.h_cur.reshape(self.ny,self.nx)
+        # cur_diff = cur_diff[~np.isnan(cur_diff)] # entire area 
+        # cur_diff = cur_diff[np.logical_and(idx_iswatersurvey,~np.isnan(cur_diff))] # underwater area
+        idx_cur = np.logical_and(np.logical_and(idx_iswatersurvey,~np.isnan(cur_diff)),idx_is_non_pier)
+        cur_diff = cur_diff[idx_cur] # underwater non-pier area 
+        n_cur_diff = cur_diff.shape[0]
+        
+        cbathy_diff = -self.h_survey-self.h_cbathy.reshape(self.ny,self.nx)
+        # cbathy_diff = cbathy_diff[~np.isnan(cbathy_diff)] # entire area
+        # cbathy_diff = cbathy_diff[np.logical_and(idx_iswatersurvey,~np.isnan(cbathy_diff))] # underwater area
+        idx_cbathy = np.logical_and(np.logical_and(idx_iswatersurvey,~np.isnan(cbathy_diff)),idx_is_non_pier)
+        cbathy_diff = cbathy_diff[idx_cbathy]  # underwater non-pier area 
+        n_cbathy_diff = cbathy_diff.shape[0]
+        
+        #print(totsumsqr)
+        r2_prior = 1. - (((prior_diff)**2).sum()/totsumsqr)
+        r2_cur = 1. - (((cur_diff)**2).sum()/totsumsqr)
+        r2_cbathy = 1. - (((cbathy_diff)**2).sum()/totsumsqr)
+
+        fig, ax = plt.subplots(1,2,figsize=(10, 25))
+        plt.subplots_adjust(wspace=0.3)
+
+        ax[0].set_title('(a) Estimate vs. Survey %s' % (self.mydatetext))
+        # ax[0].scatter(-h_survey[idx_cur], h_cur.reshape(ny,nx)[idx_cur], s = 0.5, color='blue',label='Blending ($R^2$: %5.2f)' % (r2_cur))
+        # ax[0].scatter(-h_survey[idx_prior], h_prior.reshape(ny,nx)[idx_prior], s = 0.5, color='green',label='PBT ($R^2$: %5.2f)' % (r2_prior))
+        # ax[0].scatter(-h_survey[idx_cbathy], h_cbathy.reshape(ny,nx)[idx_cbathy], s = 0.5, color='red',label='cBathy ($R^2$: %5.2f)' % (r2_cbathy))
+        ax[0].scatter(-self.h_survey[idx_cur], self.h_cur.reshape(self.ny,self.nx)[idx_cur], s = 0.5, color='blue',label='$R^2$ (Blending): %5.2f' % (r2_cur))
+        ax[0].scatter(-self.h_survey[idx_prior], self.h_prior.reshape(self.ny,self.nx)[idx_prior], s = 0.5, color='green',label='$R^2$ (PBT): %5.2f' % (r2_prior))
+        ax[0].scatter(-self.h_survey[idx_cbathy], self.h_cbathy.reshape(self.ny,self.nx)[idx_cbathy], s = 0.5, color='red',label='$R^2$ (cBathy): %5.2f' % (r2_cbathy))
+
+
+        ax[0].set_ylabel('estimate [m]')
+        ax[0].set_xlabel('survey [m]')
+        ax[0].plot([0.,8.0],[0.0,8.0],'k-')
+        # ax.set_aspect('equal', adjustable='box')
+        # plt.axis([0.01,1,0.01,1])
+        # plt.xticks([0.01, 0.5 ,1.0])
+        # plt.yticks([0.01, 0.5 ,1.0])
+        #plt.plot([0.0,0.5],[0.0,0.5],'r-')
+        ax[0].set_aspect('equal', adjustable='box')
+        #plt.axis([0.0,8.0,0.0,0.5])
+        ax[0].set_xticks([0, 4 , 8])
+        ax[0].set_yticks([0, 4 , 8])
+        ax[0].set_xlim([0,8])
+        ax[0].set_ylim([0,8])
+        l = ax[0].legend(markerscale=3,scatteryoffsets=[+0.75], fontsize = 10)#,handletextpad=0.0)#,handletextpad=-0.5)
+        #legend(scatterpoints=1,scatteryoffsets=[0],handletextpad=-0.5)
+        #for t in l.get_texts(): t.set_va('center_baseline')
+        #for t in l.get_texts(): t.set_va('center')
+
+
+        h_min_ = 0.00001
+        # final result
+        h_cur_kB = np.zeros((self.ny,self.nx,self.nfB))
+
+        for j in range(self.nfB):
+            h_cur_kB[:,:,j] = self.h_cur.reshape(self.ny,self.nx)
+
+        obsidx_cur_hmin = np.copy(self.obsidx)
+        #obsidx_cur_hmin[h_cur_kB < h_min] = False
+        obsidx_cur_hmin[h_cur_kB < h_min_] = False
+
+        #np.logical_and(~np.isnan(h_survey),(h_survey < 0.))
+
+        k_cur = self._forward(self.h_cur,self.fB,obsidx_cur_hmin)
+        obs_cur = self.k[obsidx_cur_hmin]
+
+        rmse_cur = np.sqrt(((k_cur-obs_cur)**2.).sum()/obs_cur.shape[0])
+
+        # prior result
+        h_prior_kB = np.zeros((self.ny,self.nx,self.nfB))
+
+        for i in range(self.nfB):
+            h_prior_kB[:,:,i] = self.h_prior.reshape(self.ny,self.nx)
+
+        obsidx_prior_hmin = np.copy(self.obsidx)
+        obsidx_prior_hmin[h_prior_kB < h_min_] = False
+
+        k_prior = self._forward(self.h_prior,self.fB,obsidx_prior_hmin)
+        obs_prior = self.k[obsidx_prior_hmin]
+
+        rmse_prior = np.sqrt(((k_prior-obs_prior)**2.).sum()/obs_prior.shape[0])
+
+        if self.k_cur.reshape(-1).shape[0] > 1000000:
+            ValueError('Too many observations to plot > 1 M')
+
+        k_cur_obs = np.vstack([k_cur,obs_cur])
+        k_cur_init_obs = np.vstack([k_prior,obs_prior])
+        from scipy.stats import gaussian_kde
+        z = gaussian_kde(k_cur_obs)(k_cur_obs)
+        z_init = gaussian_kde(k_cur_init_obs)(k_cur_init_obs)
+
+        # this needs to be user-defined..    
+        alpha_arr = z/z.max()
+        alpha_arr = alpha_arr*0.7 + 0.3
+
+        alpha_arr_init = z_init/z_init.max()
+        alpha_arr_init = alpha_arr_init*0.7 + 0.3
+        
+        from matplotlib.colors import to_rgb #, to_rgba
+        
+        def scatter(x, y, color, alpha_arr, **kwarg):
+        # Sort the points by density, so that the densest points are plotted last
+            idx = alpha_arr.argsort()
+            x, y, alpha_arr = x[idx], y[idx], alpha_arr[idx]
+
+            r, g, b = to_rgb(color)
+            # r, g, b, _ = to_rgba(color)
+            color = [(r, g, b, alpha) for alpha in alpha_arr]
+            ax.scatter(x, y, c=color, **kwarg)
+
+
+        ax[1].set_title('(b) Wave number $k_{f_B}$ fitting %s' % (self.mydatetext))
+
+        scatter(obs_prior, k_prior, 'green', alpha_arr_init, s=1, label='PBT (RMSE: %7.3f [m$^{-1}$])' % (rmse_prior))
+        scatter(obs_cur, k_cur, 'blue', alpha_arr, s=1, label='Blending (RMSE: %7.3f [m$^{-1}$])' % (rmse_cur))
+
+        ax[1].set_xlabel('simulated wave number [m$^{-1}$]')
+        ax[1].set_ylabel('observed wave number (cBathy Phase 1) [m$^{-1}$]')
+        # plt.plot([0.01,1.0],[0.01,1.0],'r-')
+        # ax.set_aspect('equal', adjustable='box')
+        # plt.axis([0.01,1,0.01,1])
+        # plt.xticks([0.01, 0.5 ,1.0])
+        # plt.yticks([0.01, 0.5 ,1.0])
+        ax[1].plot([0.0,0.5],[0.0,0.5],'r-')
+        ax[1].set_aspect('equal', adjustable='box')
+        #ax[1].axis([0.0,0.5,0.0,0.5])
+        ax[1].set_xlim([0,0.5])
+        ax[1].set_ylim([0,0.5])
+        ax[1].set_xticks([0.0, 0.25 ,0.5])
+        ax[1].set_yticks([0.0, 0.25 ,0.5])
+
+        # leg = ax[1].legend(markerscale=3., fontsize = 10)
+        # for lh in leg.legendHandles:
+        #     lh.set_alpha(1)
+
+
+        handles, labels = ax[1].get_legend_handles_labels()
+        leg = ax[1].legend(handles[::-1], labels[::-1], loc='upper left', markerscale=3., fontsize = 10)
+
+        for lh in leg.legendHandles:
+            lh.set_alpha(1)
+
+        plt.savefig('bathy_fitting_' + str(self.mydate) + '.png', dpi=150, bbox_inches='tight')
+        plt.show()
+
 
     def plot_transects(self,yloc=None):
         '''
