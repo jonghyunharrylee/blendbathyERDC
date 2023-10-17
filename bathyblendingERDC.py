@@ -1397,7 +1397,7 @@ class BathyBlending:
             r, g, b = to_rgb(color)
             # r, g, b, _ = to_rgba(color)
             color = [(r, g, b, alpha) for alpha in alpha_arr]
-            ax.scatter(x, y, c=color, **kwarg)
+            ax[1].scatter(x, y, c=color, **kwarg)
 
 
         ax[1].set_title('(b) Wave number $k_{f_B}$ fitting %s' % (self.mydatetext))
