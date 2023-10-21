@@ -5,9 +5,9 @@
 @version 0.1 
 @date 10/17/2023
 
-This is a template script to be used with the Bathy Blending App. The model object should be able to do three things when called upon in the app:
-    - load in the data in a cbathy format by use of the _load_data() 
-    - make predictions and saves them by use of the inv() method
+BathyBlending class for blending cBathy and PBT bathymetry data
+    - load in the data in cbathy format by use of the _load_data() 
+    - make predictions and saves them by use of the blend() method
     - plot results
 
 Tested with Python 3.10.12, Numpy 1.23.5 and Scipy 1.11.3
@@ -895,6 +895,9 @@ class BathyBlending:
         ax[0].set_title('(a) Prior (PBT)', fontsize=14)
         ax[0].set_xticks([80,500,800])
         ax[0].set_yticks([-500,0,500,1000,1500])
+        ax[0].set_ylabel('yFRF [m]', fontsize=plt.rcParams['axes.labelsize'])
+        #fig.text(0.0, 0.5, 'yFRF [m]', va='center', ha='center', rotation='vertical', fontsize=plt.rcParams['axes.labelsize'])
+
         #fig.colorbar(im0, ax=ax[0])
         im1 = ax[1].pcolormesh(YY,XX,h_cbathy,cmap='jet_r',shading='auto',vmin=hmin, vmax = hmax)
         #ax[1].set_title('Estimate ' + date[ii])
@@ -935,10 +938,10 @@ class BathyBlending:
                 ax[i].set_ylim(yFRF[0],yFRF[1])
 
         fig.text(0.5, 0.0, 'xFRF [m]', va='center', ha='center', fontsize=plt.rcParams['axes.labelsize'])
-        fig.text(0.1, 0.5, 'yFRF [m]', va='center', ha='center', rotation='vertical', fontsize=plt.rcParams['axes.labelsize'])
 
         fig.tight_layout()
         fig.subplots_adjust(top=0.87)
+        #fig.text(0.0, 0.5, 'yFRF [m]', va='center', ha='center', rotation='vertical', fontsize=plt.rcParams['axes.labelsize'])
 
         plt.savefig(join(self.output_dir,'estimate_' + str(self.mydate) + '.png'), dpi=150, bbox_inches='tight')
         plt.show()
@@ -1006,6 +1009,8 @@ class BathyBlending:
         ax[0].set_title('(a) PBT', fontsize=14)
         ax[0].set_xticks([80,500,800])
         ax[0].set_yticks([-500,0,500,1000,1500])
+        ax[0].set_ylabel('yFRF [m]', fontsize=plt.rcParams['axes.labelsize'])
+        
         #fig.colorbar(im0, ax=ax[0])
         #im1 = ax[1].pcolormesh(YY,XX,cbathy_diff,cmap='RdBu',shading='auto',vmin=hmin, vmax = hmax)
         im1 = ax[1].pcolormesh(YY,XX, cbathy_diff,cmap=cmap,shading='auto',vmin=hmin, vmax = hmax)
@@ -1043,7 +1048,7 @@ class BathyBlending:
                 ax[i].set_ylim(yFRF[0],yFRF[1])
 
         fig.text(0.5, 0.0, 'xFRF [m]', va='center', ha='center', fontsize=plt.rcParams['axes.labelsize'])
-        fig.text(0.1, 0.5, 'yFRF [m]', va='center', ha='center', rotation='vertical', fontsize=plt.rcParams['axes.labelsize'])
+        #fig.text(0.1, 0.5, 'yFRF [m]', va='center', ha='center', rotation='vertical', fontsize=plt.rcParams['axes.labelsize'])
 
         # ax[0].text(150, -300,'RMSE: %5.2f m' % (self.rmse_prior))
         # ax[0].text(150, -400,'Bias: %5.2f m' % (self.bias_prior))
