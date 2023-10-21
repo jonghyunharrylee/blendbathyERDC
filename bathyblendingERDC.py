@@ -10,7 +10,7 @@ This is a template script to be used with the Bathy Blending App. The model obje
     - make predictions and saves them by use of the inv() method
     - plot results
 
-Tested with Python 3.7.10, Numpy 1.19.5 and Tensorflow 2.5.0
+Tested with Python 3.10.12, Numpy 1.23.5 and Scipy 1.11.3
 """
 
 import numpy as np
@@ -1030,7 +1030,7 @@ class BathyBlending:
 
         cbar = ax[2].cax.colorbar(im2)
         ax[2].cax.toggle_label(True)
-        cbar.ax.set_title('depth [m]',fontsize=10)
+        cbar.ax.set_title('diff [m]',fontsize=10)
 
         if pierFRF is not None:
             for i in range(len(ax.axes_all)):
@@ -1435,7 +1435,7 @@ class BathyBlending:
         plt.show()
 
 
-    def plot_transects(self,yloc=None):
+    def plot_transects(self,yloc=None, rmste_xstart=None, rmste_xend=None):
         '''
             plot transect 
         '''
@@ -1469,9 +1469,9 @@ class BathyBlending:
             rmse_blending = np.sqrt(( (cur_diff)**2.).sum()/n_cur_diff)
             rmse_cbathy = np.sqrt( ((cbathy_diff)**2.).sum()/n_cbathy_diff)
             
-            rmste_blending = self.compute_rmste(x.reshape(-1), - self.h_cur.reshape(self.ny,self.nx)[yloc[i],:], self.h_survey[yloc[i],:])
-            rmste_prior = self.compute_rmste(x.reshape(-1), -self.h_prior.reshape(self.ny,self.nx)[yloc[i],:],self.h_survey[yloc[i],:])
-            rmste_cbathy = self.compute_rmste(x.reshape(-1),-self.h_cbathy.reshape(self.ny,self.nx)[yloc[i],:],self.h_survey[yloc[i],:])
+            rmste_blending = self.compute_rmste(x.reshape(-1), - self.h_cur.reshape(self.ny,self.nx)[yloc[i],:], self.h_survey[yloc[i],:],xstart = rmste_xstart, xend=rmste_xend)
+            rmste_prior = self.compute_rmste(x.reshape(-1), -self.h_prior.reshape(self.ny,self.nx)[yloc[i],:],self.h_survey[yloc[i],:],xstart = rmste_xstart,xend=rmste_xend)
+            rmste_cbathy = self.compute_rmste(x.reshape(-1),-self.h_cbathy.reshape(self.ny,self.nx)[yloc[i],:],self.h_survey[yloc[i],:],xstart = rmste_xstart,xend=rmste_xend)
             # print('rmse_prior: %f' % (rmse_prior))
             # print('rmse_blending: %f' % (rmse_blending))
             # print('rmse_cbathy: %f' % (rmse_cbathy))
@@ -1697,7 +1697,7 @@ class BathyBlending:
         if xend is None:
             xend = x[np.where(~np.isnan(src))[0][-1]]
 
-        m = 10 # initial pt
+        m = 100 # initial pt
         x0 = np.linspace(xstart,xend,m)
         y0 = np.zeros((2,m))
 
@@ -1719,7 +1719,6 @@ class BathyBlending:
         sol_q_func_square = lambda x: (sol.sol.__call__(x)[1])**2.
         result = np.sqrt(integrate.quad(sol_q_func_square, xstart,xend, limit=200))
         rmste = result[0]/np.sqrt(xend - xstart) 
-        
         return rmste
 
     def plot_cbathy_errors(self, x = None, y = None, kErr = None, hTempErr = None, nfB = None, mydatetext = None):
