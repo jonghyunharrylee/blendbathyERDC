@@ -1,6 +1,6 @@
 # blendbathyERDC
 
-The bathymetry blending class and dataset for our upcoming paper "Blending Bathymetry: Combination of image-derived parametric approximations and celerity data sets for nearshore bathymetry estimation". You can read a preprint from arXiv: https://arxiv.org/abs/2311.01085
+The bathymetry blending class and dataset for our upcoming paper "Blending Bathymetry: Combination of image-derived parametric approximations and celerity data sets for nearshore bathymetry estimation". You can read a preprint from arXiv: ![https://arxiv.org/abs/2311.01085](https://arxiv.org/abs/2311.01085)
 
 We also added an example notebook (see BlendingExampleFRF.ipynb above) that can reproduce all the results and figures from the paper. You can test it in Colab: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg 'Open In Colab')](https://colab.research.google.com/github/jonghyunharrylee/blendbathyERDC/blob/main/BlendingExampleFRF.ipynb)
 
